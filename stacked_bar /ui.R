@@ -43,7 +43,7 @@ body <- dashboardBody(
                    sliderInput("tyfontsize", "Y axis title font size",
                                min = 0, max = 30, value = 15
                    ),
-                   selectizeInput('colpal', "Choose a color palette",
+                   selectizeInput('colpal', "Choose a color palette (Plot 3)",
                                   selected = "Set3",
                                   choices = rownames(brewer.pal.info[brewer.pal.info$category=="qual",])),
                    checkboxInput("customcol", "Custom colors for each taxon group"),

@@ -30,6 +30,8 @@ color_list = rownames(brewer.pal.info[brewer.pal.info$category=="seq",])
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
+    td <- tempdir()
+
     counts <- reactive({
         ifelse(input$default,
                data <- read.table("./www/counts.txt",header = TRUE,sep = "\t",row.names = 1,check.names=FALSE),
@@ -76,30 +78,27 @@ shinyServer(function(input, output) {
     
     output$downloadp1 <- downloadHandler(
         filename <- function() {
-            paste("p1", "png", sep=".")
+            paste("p1", "pdf", sep=".")
         },
         content <- function(file) {
-            file.copy("./www/p1.png", file)
-        },
-        contentType = "image/png")
+            file.copy(paste0(td,"/p1.pdf"), file)
+        })
     
     output$downloadp2 <- downloadHandler(
         filename <- function() {
-            paste("p2", "png", sep=".")
+            paste("p2", "pdf", sep=".")
         },
         content <- function(file) {
-            file.copy("./www/p2.png", file)
-        },
-        contentType = "image/png")
+            file.copy(paste0(td,"/p2.pdf"), file)
+        })
     
     output$downloadp3 <- downloadHandler(
         filename <- function() {
-            paste("p3", "png", sep=".")
+            paste("p3", "pdf", sep=".")
         },
         content <- function(file) {
-            file.copy("./www/p3.png", file)
-        },
-        contentType = "image/png")
+            file.copy(paste0(td,"/p3.pdf"), file)
+        })
     
     output$colourpickers <- renderUI({
         if(input$customcol){
@@ -152,7 +151,7 @@ shinyServer(function(input, output) {
                   panel.background = element_rect(color = 'black', 
                                                   fill = 'transparent'))
         
-        ggsave("./www/p1.png",plot = p1,width = 5,height = 7)
+        ggsave(paste0(td,"/p1.pdf"),plot = p1,width = 5,height = 7)
         
         output$stp1 <- renderPlot(p1)
     })
@@ -190,7 +189,7 @@ shinyServer(function(input, output) {
                   panel.grid = element_blank(), 
                   panel.background = element_rect(color = 'black', 
                                                   fill = 'transparent'))
-        ggsave("./www/p1.png",plot = p1,width = 5,height = 7)
+        ggsave(paste0(td,"/p1.pdf"),plot = p1,width = 5,height = 7)
         
         colors$my_color <- colorRampPalette(brewer.pal(8, input$colpal))(length(unique(colors$taxa)))
         
@@ -207,7 +206,7 @@ shinyServer(function(input, output) {
                   panel.background = element_rect(color = 'black', 
                                                   fill = 'transparent'))
         
-        ggsave("./www/p2.png",plot = p2,width = 5,height = 7)
+        ggsave(paste0(td,"/p2.pdf"),plot = p2,width = 5,height = 7)
         
         output$stp1 <- renderPlot(p1)
         output$stp2 <- renderPlot(p2)
@@ -254,7 +253,7 @@ shinyServer(function(input, output) {
                       panel.grid = element_blank(), 
                       panel.background = element_rect(color = 'black', 
                                                       fill = 'transparent'))
-            ggsave("./www/p3.png",plot = p3,width = 5,height = 7)
+            ggsave(paste0(td,"/p3.pdf"),plot = p3,width = 5,height = 7)
             output$stp3 <- renderPlot(p3)
         }
         else{
