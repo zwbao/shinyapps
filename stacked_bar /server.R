@@ -33,24 +33,27 @@ shinyServer(function(input, output) {
     td <- tempdir()
 
     counts <- reactive({
-        ifelse(input$default,
+        ifelse(is.null(input$counts),
                data <- read.table("./www/counts.txt",header = TRUE,sep = "\t",row.names = 1,check.names=FALSE),
-               data <- read.table(input$counts$datapath,header = TRUE,sep = "\t",row.names = 1,check.names=FALSE))
+               data <- read.table(input$counts$datapath,header = TRUE,sep = "\t",row.names = 1,check.names=FALSE)
+               )
         data
     })
     
     colors <- reactive({
-        ifelse(input$default,
+        ifelse(is.null(input$colors),
                data <- read.table("./www/colors.txt",header = TRUE,sep = "\t",check.names=FALSE),
-               data <- read.table(input$colors$datapath,header = TRUE,sep = "\t",check.names=FALSE))
+               data <- read.table(input$colors$datapath,header = TRUE,sep = "\t",check.names=FALSE)
+               )
         colnames(data) <- c("taxa","color")
         data
     })
     
     groups <- reactive({
-        ifelse(input$default,
+        ifelse(is.null(input$groups),
                data <- read.table("./www/group.txt",header = TRUE,sep="\t",check.names=FALSE),
-               data <- read.table(input$groups$datapath,header = TRUE,sep = "\t",check.names=FALSE))
+               data <- read.table(input$groups$datapath,header = TRUE,sep = "\t",check.names=FALSE)
+               )
         colnames(data) <- c("sample","group")
         data
     })
@@ -84,12 +87,27 @@ shinyServer(function(input, output) {
             file.copy(paste0(td,"/p1.pdf"), file)
         })
     
+    output$downloadp1png <- downloadHandler(
+        filename <- function() {
+            paste("p1", "png", sep=".")
+        },
+        content <- function(file) {
+            file.copy(paste0(td,"/p1.png"), file)
+        })
+    
     output$downloadp2 <- downloadHandler(
         filename <- function() {
             paste("p2", "pdf", sep=".")
         },
         content <- function(file) {
             file.copy(paste0(td,"/p2.pdf"), file)
+        })
+    output$downloadp2png <- downloadHandler(
+        filename <- function() {
+            paste("p2", "png", sep=".")
+        },
+        content <- function(file) {
+            file.copy(paste0(td,"/p2.png"), file)
         })
     
     output$downloadp3 <- downloadHandler(
@@ -99,10 +117,17 @@ shinyServer(function(input, output) {
         content <- function(file) {
             file.copy(paste0(td,"/p3.pdf"), file)
         })
+    output$downloadp3png <- downloadHandler(
+        filename <- function() {
+            paste("p3", "png", sep=".")
+        },
+        content <- function(file) {
+            file.copy(paste0(td,"/p3.png"), file)
+        })
     
     output$colourpickers <- renderUI({
         if(input$customcol){
-            if(input$default){
+            if(!is.null(colors())){
                 pvars <- length(unique(colors()$color))
             }else{
                 validate(
@@ -151,7 +176,12 @@ shinyServer(function(input, output) {
                   panel.background = element_rect(color = 'black', 
                                                   fill = 'transparent'))
         
-        ggsave(paste0(td,"/p1.pdf"),plot = p1,width = 5,height = 7)
+        ggsave(paste0(td,"/p1.pdf"),plot = p1,
+               width = input$plotwidth/96,
+               height = input$plotheight/96)
+        ggsave(paste0(td,"/p1.png"),plot = p1,
+               width = input$plotwidth/96,
+               height = input$plotheight/96)
         
         output$stp1 <- renderPlot(p1)
     })
@@ -189,8 +219,14 @@ shinyServer(function(input, output) {
                   panel.grid = element_blank(), 
                   panel.background = element_rect(color = 'black', 
                                                   fill = 'transparent'))
-        ggsave(paste0(td,"/p1.pdf"),plot = p1,width = 5,height = 7)
-        
+        ggsave(paste0(td,"/p1.pdf"),
+               plot = p1,
+               width = input$plotwidth/96,
+               height = input$plotheight/96)
+        ggsave(paste0(td,"/p1.png"),
+               plot = p1,
+               width = input$plotwidth/96,
+               height = input$plotheight/96)
         colors$my_color <- colorRampPalette(brewer.pal(8, input$colpal))(length(unique(colors$taxa)))
         
         p2 <- ggplot(tmp,aes(group,value,fill=variable)) +
@@ -206,7 +242,12 @@ shinyServer(function(input, output) {
                   panel.background = element_rect(color = 'black', 
                                                   fill = 'transparent'))
         
-        ggsave(paste0(td,"/p2.pdf"),plot = p2,width = 5,height = 7)
+        ggsave(paste0(td,"/p2.pdf"),plot = p2,
+               width = input$plotwidth/96,
+               height = input$plotheight/96)
+        ggsave(paste0(td,"/p2.png"),plot = p2,
+               width = input$plotwidth/96,
+               height = input$plotheight/96)
         
         output$stp1 <- renderPlot(p1)
         output$stp2 <- renderPlot(p2)
@@ -218,19 +259,38 @@ shinyServer(function(input, output) {
                     id = "plotarea",width = NULL,
                     tabPanel("Plot 1", 
                              h4("Random colors for each taxon group"),
-                             plotOutput("stp1") %>% withSpinner(),
-                             actionButton("rep", label = "Re-generate plot1"),
-                             downloadButton("downloadp1", "Save plot1", icon = icon("download"))),
+                             plotOutput("stp1",
+                                        width = input$plotwidth,
+                                        height = input$plotheight) %>% withSpinner(),
+                             actionButton("rep", label = "Re-generate"),
+                             downloadButton("downloadp1", "Save PDF", icon = icon("download")),
+                             downloadButton("downloadp1png", "Save PNG", icon = icon("download"))),
                     tabPanel("Plot 2",
                              h4("Random colors for each taxon"),
-                             plotOutput("stp2") %>% withSpinner(),
-                             downloadButton("downloadp2", "Save plot2", icon = icon("download"))),
+                             plotOutput("stp2",
+                                        width = input$plotwidth,
+                                        height = input$plotheight) %>% withSpinner(),
+                             downloadButton("downloadp2", "Save PDF", icon = icon("download")),
+                             downloadButton("downloadp2png", "Save PNG", icon = icon("download"))),
                     tabPanel("Plot 3",
                              h4("Custom colors for each taxon group"),
-                             plotOutput("stp3") %>% withSpinner(),
-                             downloadButton("downloadp3", "Save plot3", icon = icon("download")))
+                             plotOutput("stp3",
+                                        width = input$plotwidth,
+                                        height = input$plotheight) %>% withSpinner(),
+                             downloadButton("downloadp3", "Save PDF", icon = icon("download")),
+                             downloadButton("downloadp3png", "Save PNG", icon = icon("download")))
                 )
             })
+            
+            output$textanno <- renderUI({
+                tags$div(
+                    tags$h4("Plot1: Random colors for each taxon group"), 
+                    tags$h4("Plot2: Random colors for each taxon"),
+                    tags$h4("Plot3: Custom colors for each taxon group")
+                )
+            })
+            
+            
             
             custom_colors <- c()
             for (i in seq(length(unique(colors$color)))) {
@@ -253,23 +313,42 @@ shinyServer(function(input, output) {
                       panel.grid = element_blank(), 
                       panel.background = element_rect(color = 'black', 
                                                       fill = 'transparent'))
-            ggsave(paste0(td,"/p3.pdf"),plot = p3,width = 5,height = 7)
+            ggsave(paste0(td,"/p3.pdf"),plot = p3,
+                   width = input$plotwidth/96,
+                   height = input$plotheight/96)
+            ggsave(paste0(td,"/p3.png"),plot = p3,
+                   width = input$plotwidth/96,
+                   height = input$plotheight/96)
             output$stp3 <- renderPlot(p3)
         }
         else{
+            output$textanno <- renderUI({
+                tags$div(
+                    tags$h4("Plot1: Random colors for each taxon group"), 
+                    tags$h4("Plot2: Random colors for each taxon")
+                )
+            })
+            
             output$ui <- renderUI({
                 tabBox(
                     title = "Plot Area",
                     id = "plotarea",width = NULL,
                     tabPanel("Plot 1", 
                              h4("Random colors for each taxon group"),
-                             plotOutput("stp1") %>% withSpinner(),
-                             actionButton("rep", label = "Re-generate plot1"),
-                             downloadButton("downloadp1", "Save plot1", icon = icon("download"))),
+                             plotOutput("stp1",
+                                        width = input$plotwidth,
+                                        height = input$plotheight) %>% withSpinner(),
+                             actionButton("rep", label = "Re-generate"),
+                             downloadButton("downloadp1", "Save PDF", icon = icon("download")),
+                             downloadButton("downloadp1png", "Save PNG", icon = icon("download"))
+),
                     tabPanel("Plot 2",
                              h4("Random colors for each taxon"),
-                             plotOutput("stp2") %>% withSpinner(),
-                             downloadButton("downloadp2", "Save plot2", icon = icon("download")))
+                             plotOutput("stp2",
+                                        width = input$plotwidth,
+                                        height = input$plotheight) %>% withSpinner(),
+                             downloadButton("downloadp2", "Save PDF", icon = icon("download")),
+                             downloadButton("downloadp2png", "Save PNG", icon = icon("download")))
                 )
             })
         }

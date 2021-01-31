@@ -16,19 +16,17 @@ body <- dashboardBody(
                    collapsible = TRUE,width = NULL,
                    h5("Upload tab-delimited text files."),
                    fileInput("counts",
-                             "Choose count file(.tsv)",
+                             "Choose count file",
                              multiple = FALSE,
                              accept = c(".txt")),
                    fileInput("groups",
-                             "Choose group file(.tsv)",
+                             "Choose group file",
                              multiple = FALSE,
                              accept = c(".txt")),
                    fileInput("colors",
-                             "Choose color file(.tsv)",
+                             "Choose color file",
                              multiple = FALSE,
-                             accept = c(".txt")),
-                   checkboxInput("default", "Example data",
-                                 value = TRUE)
+                             accept = c(".txt"))
                ),
                box(
                    title = "Customize", status = "warning", solidHeader = TRUE,
@@ -43,9 +41,15 @@ body <- dashboardBody(
                    sliderInput("tyfontsize", "Y axis title font size",
                                min = 0, max = 30, value = 15
                    ),
-                   selectizeInput('colpal', "Choose a color palette (Plot 3)",
+                   selectizeInput('colpal', "Choose a color palette (Plot 2)",
                                   selected = "Set3",
                                   choices = rownames(brewer.pal.info[brewer.pal.info$category=="qual",])),
+                   sliderInput("plotheight", "Height (pixels)",
+                               min = 400, max = 1000, value = 460, step = 20
+                   ),
+                   sliderInput("plotwidth", "Width (pixels)",
+                               min = 400, max = 1000, value = 400, step = 20
+                   ),
                    checkboxInput("customcol", "Custom colors for each taxon group"),
                    uiOutput("colourpickers"),
                    actionButton("run", label = "Plot", icon = icon("paper-plane"))
@@ -60,7 +64,8 @@ body <- dashboardBody(
                    tabPanel("Group", reactableOutput("gp_table")),
                    tabPanel("Color", reactableOutput("cl_table"))
                ),
-               uiOutput("ui")
+               uiOutput("ui"),
+               uiOutput("textanno")
         )
     )
 )
